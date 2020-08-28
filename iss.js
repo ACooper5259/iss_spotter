@@ -22,8 +22,8 @@ const fetchMyIP = function (callback) {
       return;
     }
 
-    const infoReceived = JSON.parse(body);
-    const ip = infoReceived['ip'];
+    const fullInfoReceived = JSON.parse(body);
+    const ip = fullInfoReceived['ip'];
     // console.log(ip)
     callback(null, ip);
 
@@ -32,28 +32,52 @@ const fetchMyIP = function (callback) {
 
 
 const fetchCoordsByIP = function (ip, callback) {
-  request('https://ipvigilante.com/json/no', (error, response, body) => {
+  request(`https://ipvigilante.com/json/${ip}`, (error, response, body) => {
     if (error) {
       return callback(error, null)
     }
 
     if (response.statusCode !== 200) {
-      const msg = `Status Code ${response.statusCode} when fetching coordinates for IP. Response: ${body}`;
-      callback(msg, null);
+      const msg = `Status Code ${response.statusCode} when fetching coords for IP. Response: ${body}`;
+      callback((msg), null);
       return;
     }
 
-    const fullDetail = JSON.parse(body);
-    const coordinates = {}
-    coordinates['latitude'] = fullDetail['data']['latitude']
-    coordinates['longitude'] = fullDetail['data']['longitude']
-    console.log(coordinates)
-    callback(null, coordinates)
+    const fullInfoReceived = JSON.parse(body);
+    const coords = {}
+    coords['latitude'] = fullInfoReceived['data']['latitude']
+    coords['longitude'] = fullInfoReceived['data']['longitude']
+    // console.log(coords)
+    callback(null, coords)
+  })
+}
+
+const fetchISSFlyOverTimes = function (coords, callback) {
+  request(`http://api.open-notify.org/iss-pass.json?lat=${coords["latitude"]}&lon=${coords["longitude"]}`, (error, response, body) => {
+
+
+    if (error) {
+      return callback(error, null)
+    }
+
+    if (response.statusCode !== 200) {
+      const msg = `Status Code ${response.statusCode} when fetching times for flyover. Response: ${body}`;
+      callback((msg), null);
+      return;
+    }
+
+    // console.log(body)
+    const fullInfoReceived = JSON.parse(body)
+    //console.log(fullInfoReceived)
+    const flyOverTimes = fullInfoReceived['response']
+    //console.log(flyOverTimes)
+    callback(null, flyOverTimes)
+
+
   })
 }
 
 
 
 
-
-module.exports = { fetchMyIP, fetchCoordsByIP };
+module.exports = { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes };
