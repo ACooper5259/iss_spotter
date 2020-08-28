@@ -32,14 +32,14 @@ const fetchMyIP = function (callback) {
 
 
 const fetchCoordsByIP = function (ip, callback) {
-  request('https://ipvigilante.com/json/75.156.34.27', (error, response, body) => {
+  request('https://ipvigilante.com/json/no', (error, response, body) => {
     if (error) {
       return callback(error, null)
     }
 
     if (response.statusCode !== 200) {
       const msg = `Status Code ${response.statusCode} when fetching coordinates for IP. Response: ${body}`;
-      callback(Error(msg), null);
+      callback(msg, null);
       return;
     }
 
