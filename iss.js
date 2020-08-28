@@ -34,7 +34,7 @@ const fetchMyIP = function (callback) {
 const fetchCoordsByIP = function (ip, callback) {
   request(`https://ipvigilante.com/json/${ip}`, (error, response, body) => {
     if (error) {
-      return callback(error, null)
+      return callback(error, null);
     }
 
     if (response.statusCode !== 200) {
@@ -44,20 +44,19 @@ const fetchCoordsByIP = function (ip, callback) {
     }
 
     const fullInfoReceived = JSON.parse(body);
-    const coords = {}
-    coords['latitude'] = fullInfoReceived['data']['latitude']
-    coords['longitude'] = fullInfoReceived['data']['longitude']
+    const coords = {};
+    coords['latitude'] = fullInfoReceived['data']['latitude'];
+    coords['longitude'] = fullInfoReceived['data']['longitude'];
     // console.log(coords)
-    callback(null, coords)
-  })
-}
+    callback(null, coords);
+  });
+};
 
 const fetchISSFlyOverTimes = function (coords, callback) {
   request(`http://api.open-notify.org/iss-pass.json?lat=${coords["latitude"]}&lon=${coords["longitude"]}`, (error, response, body) => {
 
-
     if (error) {
-      return callback(error, null)
+      return callback(error, null);
     }
 
     if (response.statusCode !== 200) {
@@ -67,17 +66,41 @@ const fetchISSFlyOverTimes = function (coords, callback) {
     }
 
     // console.log(body)
-    const fullInfoReceived = JSON.parse(body)
+    const fullInfoReceived = JSON.parse(body);
     //console.log(fullInfoReceived)
-    const flyOverTimes = fullInfoReceived['response']
-    //console.log(flyOverTimes)
-    callback(null, flyOverTimes)
+    const passTimes = fullInfoReceived['response'];
+    //console.log(passTimes)
+    callback(null, passTimes);
+  });
+};
 
-
+/**
+ * Orchestrates multiple API requests in order to determine the next 5 upcoming ISS fly overs for the user's current location.
+ * Input:
+ *   - A callback with an error or results.
+ * Returns (via Callback):
+ *   - An error, if any (nullable)
+ *   - The fly-over times as an array (null if error):
+ *     [ { risetime: <number>, duration: <number> }, ... ]
+ */
+const nextISSTimesForMyLocation = function (callback) {
+  fetchMyIP((error, ip) => {
+    if (error) {
+      return callback(error, null)
+    }
+    fetchCoordsByIP(ip, (error, coords) => {
+      if (error) {
+        return callback(error, null)
+      }
+      fetchISSFlyOverTimes(coords, (error, passTimes) => {
+        if (error) {
+          return callback(error, null)
+        }
+        callback(null, passTimes)
+      })
+    })
   })
-}
+};
 
 
-
-
-module.exports = { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes };
+module.exports = { nextISSTimesForMyLocation };
